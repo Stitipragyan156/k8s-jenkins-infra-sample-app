@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         AWS_ACCOUNT_ID = credentials('aws-account-id')   // your stored secret
-        AWS_REGION = "ap-south-1"
+        AWS_REGION = "us-east-1"
         IMAGE = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/springboot-eks-app"
     }
 
