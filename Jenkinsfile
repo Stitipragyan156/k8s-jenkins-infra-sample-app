@@ -2,7 +2,9 @@ pipeline {
     agent any
 
     environment {
-        IMAGE = "your-dockerhub/springboot-eks-app"
+        AWS_ACCOUNT_ID = credentials('aws-account-id')   // your stored secret
+        AWS_REGION = "ap-south-1"
+        IMAGE = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/springboot-eks-app"
     }
 
     stages {
@@ -18,12 +20,23 @@ pipeline {
             }
         }
 
+        stage('Login to ECR') {
+            steps {
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: 'aws-creds'   // your AWS creds in Jenkins
+                ]]) {
+                    sh '''
+                    aws ecr get-login-password --region $AWS_REGION \
+                    | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+                    '''
+                }
+            }
+        }
+
         stage('Push Image') {
             steps {
-                withCredentials([string(credentialsId: 'dockerhub-pass', variable: 'PASS')]) {
-                    sh 'docker login -u your-user -p $PASS'
-                    sh 'docker push $IMAGE'
-                }
+                sh 'docker push $IMAGE'
             }
         }
 
